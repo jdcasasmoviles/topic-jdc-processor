@@ -1,0 +1,44 @@
+{
+  "namespace": "com.example.avro",
+  "type": "record",
+  "name": "MessageAvro",
+  "doc": "Message schema for Kafka topic",
+  "fields": [
+    {
+      "name": "id",
+      "type": "string",
+      "doc": "Unique message identifier"
+    },
+    {
+      "name": "content",
+      "type": "string",
+      "doc": "Message content"
+    },
+    {
+      "name": "source",
+      "type": "string",
+      "doc": "Source system"
+    },
+    {
+      "name": "timestamp",
+      "type": "long",
+      "doc": "Message timestamp in milliseconds since epoch",
+      "logicalType": "timestamp-millis"
+    },
+    {
+      "name": "priority",
+      "type": "int",
+      "doc": "Message priority (1-10)",
+      "default": 1
+    },
+    {
+      "name": "metadata",
+      "type": {
+        "type": "map",
+        "values": "string"
+      },
+      "doc": "Additional metadata",
+      "default": {}
+    }
+  ]
+}

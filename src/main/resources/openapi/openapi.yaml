@@ -1,0 +1,188 @@
+openapi: 3.0.1
+info:
+  title: Topic JDC Processor API
+  description: API for processing and publishing messages to Kafka topic
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local server
+tags:
+  - name: messages
+    description: Message processing operations
+paths:
+  /messages:
+    post:
+      tags:
+        - messages
+      summary: Process and publish a message
+      operationId: processMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      responses:
+        '200':
+          description: Message processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Bad Request - Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                validationError:
+                  value:
+                    error: "Validation Error"
+                    message: "Invalid message format"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    status: 400
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    error: "Resource not found"
+                    message: "Message with ID 123 not found"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    status: 404
+        '429':
+          description: Too Many Requests - Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                rateLimit:
+                  value:
+                    error: "Rate limit exceeded"
+                    message: "Too many requests. Please try again later"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    status: 429
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                serverError:
+                  value:
+                    error: "Internal Server Error"
+                    message: "An unexpected error occurred"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    status: 500
+        '504':
+          description: Gateway Timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                timeout:
+                  value:
+                    error: "Gateway Timeout"
+                    message: "The request timed out"
+                    timestamp: "2024-01-01T00:00:00Z"
+                    status: 504
+components:
+  schemas:
+    MessageRequest:
+      type: object
+      required:
+        - id
+        - content
+        - source
+      properties:
+        id:
+          type: string
+          minLength: 3
+          maxLength: 50
+          pattern: '^[a-zA-Z0-9_-]+$'
+          description: Unique message identifier
+          example: "msg-123-456"
+        content:
+          type: string
+          minLength: 1
+          maxLength: 1000
+          description: Message content
+          example: "Sample message content"
+        source:
+          type: string
+          minLength: 2
+          maxLength: 100
+          description: Source system identifier
+          example: "web-app"
+        priority:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Message priority (1-10)
+          example: 5
+    MessageResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: Original message ID
+          example: "msg-123-456"
+        status:
+          type: string
+          enum: [SUCCESS, FAILED]
+          description: Processing status
+          example: "SUCCESS"
+        processedAt:
+          type: string
+          format: date-time
+          description: Processing timestamp
+          example: "2024-01-01T00:00:00Z"
+        topic:
+          type: string
+          description: Kafka topic name
+          example: "topic-jdc"
+        partition:
+          type: integer
+          description: Kafka partition
+          example: 0
+        offset:
+          type: integer
+          format: int64
+          description: Kafka offset
+          example: 42
+        errorMessage:
+          type: string
+          description: Error message if status is FAILED
+          example: "Failed to publish message"
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Validation Error"
+        message:
+          type: string
+          description: Detailed error message
+          example: "Invalid message format"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp
+          example: "2024-01-01T00:00:00Z"
+        path:
+          type: string
+          description: Request path
+          example: "/api/v1/messages"
+        status:
+          type: integer
+          description: HTTP status code
+          example: 400
