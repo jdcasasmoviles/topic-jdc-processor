@@ -79,7 +79,7 @@ clean_directories() {
         print_info "Creando directorio $PROYECTO_DIR"
     fi
     
-    mkdir -p "$PROYECTO_DIR/target" && mkdir -p "$PROYECTO_DIR/target/quarkus-app"
+    mkdir -p "$PROYECTO_DIR/target"
     print_success "Estructura de directorios creada"
 }
 
@@ -114,25 +114,6 @@ download_jars() {
     wget "http://10.0.2.2:8000/target/$jarfile" -P target/
 done; then
         print_success "JAR ejecutable descargado en target"
-    else
-        print_error "No se pudo descargar JAR"
-        return 1
-    fi
-}
-
-download_quarkusjars() {
-    print_info "Buscando archivos JAR en target/quarkus-app/..."
-    
-    cd "$PROYECTO_DIR" || exit 1
-    
-    # Obtener lista de JARs
-    JARS=$(wget -q -O- "$URL_BASE/target/quarkus-app" | grep -o 'href="[^"]*quarkus-run[^"]*\.jar"' | sed 's/href="//;s/"//')
-    
-    if wget -q -O- http://10.0.2.2:8000/target/quarkus-app/ | grep -o 'href="[^"]*quarkus-run[^"]*\.jar"' | sed 's/href="//;s/"//' | while read jarfile; do
-    echo "Descargando: $jarfile"
-    wget "http://10.0.2.2:8000/target/quarkus-app/$jarfile" -P target/quarkus-app/
-done; then
-        print_success "JAR ejecutable descargado en target/quarkus-app/"
     else
         print_error "No se pudo descargar JAR"
         return 1
@@ -238,8 +219,6 @@ main() {
     
     # Paso 5: Descargar JARs
     download_jars
-    echo ""
-    download_quarkusjars
     echo ""
     
     # Paso 6: Ejecutar podman-compose

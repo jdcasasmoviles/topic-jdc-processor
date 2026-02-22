@@ -20,6 +20,7 @@
         <quarkus-plugin.version>3.15.1</quarkus-plugin.version>
         <compiler-plugin.version>3.11.0</compiler-plugin.version>
         <quarkus.platform.group-id>io.quarkus.platform</quarkus.platform.group-id>
+        <quarkus.package.jar.type>uber-jar</quarkus.package.jar.type>
     </properties>
 
     <dependencies>
@@ -94,6 +95,9 @@
                 <groupId>io.quarkus</groupId>
                 <artifactId>quarkus-maven-plugin</artifactId>
                 <version>${quarkus-plugin.version}</version>
+                <configuration>
+                    <attachRunnerAsMainArtifact>true</attachRunnerAsMainArtifact>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
