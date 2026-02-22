@@ -1,13 +1,11 @@
 package com.example.infrastructure.config;
 
-import com.example.infrastructure.util.Constants;
 import io.smallrye.common.annotation.Identifier;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.inject.Inject;
+import jakarta.enterprise.inject.Produces;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,8 +15,8 @@ public class KafkaConfig {
     @ConfigProperty(name = "kafka.bootstrap.servers")
     String bootstrapServers;
 
+    @Produces
     @Identifier("default-kafka-producer")
-    @ApplicationScoped
     public Map<String, Object> createKafkaProducerConfig() {
         Map<String, Object> props = new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);

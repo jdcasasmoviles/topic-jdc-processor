@@ -10,7 +10,7 @@ tags:
   - name: messages
     description: Message processing operations
 paths:
-  /messages:
+  /task:
     post:
       tags:
         - messages
@@ -21,14 +21,14 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/MessageRequest'
+              $ref: '#/components/schemas/TaskRequest'
       responses:
         '200':
           description: Message processed successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessageResponse'
+                $ref: '#/components/schemas/TaskResponse'
         '400':
           description: Bad Request - Validation error
           content:
@@ -96,72 +96,38 @@ paths:
                     status: 504
 components:
   schemas:
-    MessageRequest:
+    TaskRequest:
       type: object
       required:
-        - id
-        - content
-        - source
+        - name
+        - description
       properties:
-        id:
-          type: string
-          minLength: 3
-          maxLength: 50
-          pattern: '^[a-zA-Z0-9_-]+$'
-          description: Unique message identifier
-          example: "msg-123-456"
-        content:
+        name:
           type: string
           minLength: 1
-          maxLength: 1000
-          description: Message content
+          maxLength: 300
+          description: Name task
           example: "Sample message content"
-        source:
+        description:
           type: string
           minLength: 2
-          maxLength: 100
-          description: Source system identifier
+          maxLength: 500
+          description: Description task
           example: "web-app"
-        priority:
+    TaskResponse:
+      type: object
+      properties:
+        id:
           type: integer
           minimum: 1
           maximum: 10
-          description: Message priority (1-10)
+          description: Id task
           example: 5
-    MessageResponse:
-      type: object
-      properties:
-        messageId:
-          type: string
-          description: Original message ID
-          example: "msg-123-456"
         status:
           type: string
           enum: [SUCCESS, FAILED]
           description: Processing status
           example: "SUCCESS"
-        processedAt:
-          type: string
-          format: date-time
-          description: Processing timestamp
-          example: "2024-01-01T00:00:00Z"
-        topic:
-          type: string
-          description: Kafka topic name
-          example: "topic-jdc"
-        partition:
-          type: integer
-          description: Kafka partition
-          example: 0
-        offset:
-          type: integer
-          format: int64
-          description: Kafka offset
-          example: 42
-        errorMessage:
-          type: string
-          description: Error message if status is FAILED
-          example: "Failed to publish message"
     ErrorResponse:
       type: object
       properties:
