@@ -13,8 +13,8 @@ services:
       - jdc-network
     healthcheck:
       disable: true  # ← Esto deshabilita el healthcheck
-    mem_limit: 1G
-    mem_reservation: 512M
+    mem_limit: 384M
+    mem_reservation: 256M
     restart: on-failure:3  # Reiniciar si falla hasta 3 veces
     logging:
       driver: "json-file"
@@ -36,7 +36,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+      KAFKA_HEAP_OPTS: "-Xmx384M -Xms384M"
       KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 30000  # Reducido de 60000
       KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 30000     # Reducido de 60000
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
@@ -56,7 +56,7 @@ services:
       timeout: 10s
       retries: 20
       start_period: 30s  # Reducido de 60s
-    mem_limit: 1G
+    mem_limit: 768M
     mem_reservation: 512M
     restart: on-failure:3
     logging:
@@ -74,7 +74,7 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_HEAP_OPTS: "-Xmx256M -Xms256M"
+      SCHEMA_REGISTRY_HEAP_OPTS: "-Xmx192M -Xms192M"
       SCHEMA_REGISTRY_KAFKASTORE_TIMEOUT_MS: 10000  # Timeout más agresivo
       SCHEMA_REGISTRY_KAFKASTORE_INIT_TIMEOUT_MS: 15000
       SCHEMA_REGISTRY_MASTER_ELIGIBILITY: "true"
@@ -89,7 +89,7 @@ services:
       timeout: 5s
       retries: 10
       start_period: 10s
-    mem_limit: 512M
+    mem_limit: 384M
     mem_reservation: 256M
     restart: on-failure:3
     logging:
@@ -109,13 +109,14 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
       KAFKA_CLUSTERS_0_METRICS_POLLING_INTERVAL_SEC: 10
+      JAVA_OPTS: "-Xmx384M -Xms384M"
     networks:
       - jdc-network
     depends_on:
       - kafka
       - schema-registry
     mem_limit: 512M
-    mem_reservation: 256M
+    mem_reservation: 384M
     restart: on-failure:3
     logging:
       driver: "json-file"
@@ -138,12 +139,13 @@ services:
       MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       QUARKUS_LOG_LEVEL: INFO
       QUARKUS_KAFKA_SNAPSHOT_PRODUCER_ENABLE: "false"
+      JAVA_OPTS: "-Xmx192M -Xms192M"
     ports:
       - "8080:8084"
     networks:
       - jdc-network
-    mem_limit: 1G
-    mem_reservation: 512M
+    mem_limit: 384M
+    mem_reservation: 256M
     restart: on-failure:3
     logging:
       driver: "json-file"
