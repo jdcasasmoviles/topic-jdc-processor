@@ -154,6 +154,3 @@ services:
 networks:
   jdc-network:
     driver: bridge
-    ipam:
-      config:
-        - subnet: 10.89.0.0/24  # Subnet fija para consistencia
