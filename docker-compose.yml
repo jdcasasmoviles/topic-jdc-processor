@@ -9,13 +9,14 @@ services:
       ZOOKEEPER_SYNC_LIMIT: 2
     ports:
       - "2181:2181"
-    networks:
-      - jdc-network
     healthcheck:
-      disable: true  # ← Esto deshabilita el healthcheck
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
+      interval: 8s
+      timeout: 6s
+      retries: 7
+      start_period: 8s    # ← Solo una vez
     mem_limit: 256M
     mem_reservation: 192M
-    restart: on-failure:3  # Reiniciar si falla hasta 3 veces
     logging:
       driver: "json-file"
       options:
@@ -26,7 +27,8 @@ services:
     image: confluentinc/cp-kafka:7.5.0
     container_name: kafka
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -53,11 +55,19 @@ services:
         aliases:
           - kafka
     healthcheck:
-      test: ["CMD", "bash", "-c", "kafka-topics --bootstrap-server localhost:9092 --list || exit 1"]
-      interval: 15s
-      timeout: 10s
-      retries: 20
-      start_period: 30s  # Reducido de 60s
+      test: ["CMD", "bash", "-c", "
+        pgrep -f 'kafka\\.Kafka' >/dev/null || exit 1
+        nc -z localhost 9092 || exit 1
+        # Después de 20s, verificar ZK
+        if [ $$(($(date +%s) - $$(stat -c %Y /proc/1 2>/dev/null || echo $$(date +%s)))) -gt 12 ]; then
+          echo srvr | nc zookeeper 2181 2>/dev/null | grep -q Mode || exit 1
+        fi
+        exit 0
+        "]  
+      interval: 8s
+      timeout: 5s
+      retries: 8
+      start_period: 10s
     mem_limit: 512M
     mem_reservation: 512M
     restart: on-failure:3
@@ -71,7 +81,8 @@ services:
     image: confluentinc/cp-schema-registry:7.5.0
     container_name: schema-registry
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy    
     environment:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
@@ -87,68 +98,17 @@ services:
     networks:
       - jdc-network
     healthcheck:
-      test: curl -f http://localhost:8081/subjects || exit 1
-      interval: 20s
-      timeout: 5s
-      retries: 10
-      start_period: 10s
+      test: ["CMD", "bash", "-c", "
+        nc -z localhost 8081 || exit 1
+        # Usar /dev/tcp en lugar de curl
+        timeout 2 bash -c 'echo -e \"GET /subjects HTTP/1.0\\n\\n\" > /dev/tcp/localhost/8081' 2>/dev/null || exit 1
+        "]  
+      interval: 6s
+      timeout: 4s
+      retries: 8
+      start_period: 8s
     mem_limit: 512M
     mem_reservation: 384M
-    restart: on-failure:3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  kafbat-ui:
-    container_name: kafbat-ui
-    image: ghcr.io/kafbat/kafka-ui:latest
-    ports:
-      - "8086:8080"
-    environment:
-      DYNAMIC_CONFIG_ENABLED: 'true'
-      KAFKA_CLUSTERS_0_NAME: vm-cluster
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schema-registry:8081
-      KAFKA_CLUSTERS_0_METRICS_POLLING_INTERVAL_SEC: 30 # De 30 a 60 segundos.Esto reducirá la carga de métricas a la mitad
-      JAVA_OPTS: "-Xmx512M -Xms512M"
-    networks:
-      - jdc-network
-    depends_on:
-      - kafka
-      - schema-registry
-    mem_limit: 768M
-    mem_reservation: 512M
-    restart: on-failure:3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: topic-jdc-processor-app:latest
-    container_name: topic-jdc-processor
-    depends_on:
-      - kafka
-      - schema-registry
-    environment:
-      QUARKUS_HTTP_PORT: 8084
-      KAFKA_BOOTSTRAP_SERVERS: PLAINTEXT://kafka:9092
-      MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8081
-      QUARKUS_LOG_LEVEL: INFO
-      QUARKUS_KAFKA_SNAPSHOT_PRODUCER_ENABLE: "false"
-      JAVA_OPTS: "-Xmx128M -Xms128M"
-    ports:
-      - "8080:8084"
-    networks:
-      - jdc-network
-    mem_limit: 256M
-    mem_reservation: 256M
     restart: on-failure:3
     logging:
       driver: "json-file"
