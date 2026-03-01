@@ -183,3 +183,8 @@ services:
 networks:
   jdc-network:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16  # Red fija para mejor estabilidad
+    driver_opts:
+      com.docker.network.bridge.name: jdc-bridge
