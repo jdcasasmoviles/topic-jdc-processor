@@ -155,8 +155,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: topic-jdc-processor-app:latest
-    container_name: topic-jdc-processor
+      args:
+        JAR_FILE: target/*.jar  # Si quieres pasar el nombre del JAR      
+    image: app:latest
+    container_name: app
     depends_on:
       schema-registry:
         condition: service_healthy
