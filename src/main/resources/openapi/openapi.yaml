@@ -108,12 +108,103 @@ components:
           maxLength: 300
           description: Name task
           example: "Sample message content"
+        author:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: Name author
+          example: "Candy Diaz"
+        telephone:
+          type: string
+          minLength: 1
+          maxLength: 11
+          description: Telefono
+          example: "999235234"
+        email:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Email
+          example: "candy@email.com"
         description:
           type: string
           minLength: 2
           maxLength: 500
           description: Description task
           example: "web-app"
+        publisher:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: topico a publicar
+          example: "topico"
+        version:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: verssion de uso
+          example: "v10"
+        created_at:
+          type: string
+          format: timestamp
+          example: 2023-05-18T14:29:26.384Z
+        updated_at:
+          type: string
+          format: timestamp
+          example: 2023-05-18T14:29:26.384Z   
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/ListTask"   
+    ListTask:
+      type: object
+      properties:
+        idTask:
+          type: integer
+          minimum: 1
+          maximum: 10
+          description: Id task
+          example: 5    
+        nameTask:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: Name task
+          example: "Cocinar"
+        assigned:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: Name author
+          example: "Tania Diaz"
+        dni:
+          type: string
+          minLength: 8
+          maxLength: 8
+          description: dni
+          example: "99235234"
+        email:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Email
+          example: "candy@email.com"
+        description:
+          type: string
+          minLength: 2
+          maxLength: 500
+          description: Description task
+          example: "Preparar alm uerzo"
+        informer:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Persona que creo la tarea
+          example: "Administrador o jefe"
+        timeTask:
+          type: integer
+          description: tiempo de duracion de la tarea
+          example: 10                   
     TaskResponse:
       type: object
       properties:

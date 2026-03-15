@@ -51,6 +51,11 @@
             <groupId>io.quarkus</groupId>
             <artifactId>quarkus-smallrye-fault-tolerance</artifactId>
         </dependency>
+        <!--  Instrumentar  Microservicio  -->
+        <dependency>
+            <groupId>io.quarkus</groupId>
+            <artifactId>quarkus-micrometer-registry-prometheus</artifactId>
+        </dependency>
         <!-- Kafka Avro registry Serializer -->
         <dependency>
             <groupId>io.quarkus</groupId>
@@ -119,36 +124,6 @@
             </plugin>
 
             <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>${openapi-generator.version}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi.yaml</inputSpec>
-                            <generatorName>jaxrs-spec</generatorName>
-                            <packageName>com.example.api</packageName>
-                            <apiPackage>com.example.api</apiPackage>
-                            <modelPackage>com.example.api.model</modelPackage>
-                            <generateApiTests>false</generateApiTests>
-                            <generateModelTests>false</generateModelTests>
-                            <configOptions>
-                                <interfaceOnly>true</interfaceOnly>
-                                <useSwaggerAnnotations>false</useSwaggerAnnotations>
-                                <dateLibrary>java8</dateLibrary>
-                                <java8>true</java8>
-                                <sourceFolder>src/gen/java</sourceFolder>
-                                <useJakartaEe>true</useJakartaEe>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <plugin>
                 <groupId>org.apache.avro</groupId>
                 <artifactId>avro-maven-plugin</artifactId>
                 <version>${avro.version}</version>
@@ -163,6 +138,38 @@
                             <outputDirectory>${project.basedir}/target/generated-sources/avro/</outputDirectory>
                             <stringType>String</stringType>
                             <enableDecimalLogicalType>true</enableDecimalLogicalType>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.openapitools</groupId>
+                <artifactId>openapi-generator-maven-plugin</artifactId>
+                <version>${openapi-generator.version}</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <inputSpec>${project.basedir}/src/main/resources/openapi/openapi.yaml</inputSpec>
+                            <templateDirectory>${project.basedir}/openapi-templates</templateDirectory>
+                            <generatorName>jaxrs-spec</generatorName>
+                            <packageName>com.example.api</packageName>
+                            <apiPackage>com.example.api</apiPackage>
+                            <modelPackage>com.example.api.model</modelPackage>
+                            <generateApiTests>false</generateApiTests>
+                            <generateModelTests>false</generateModelTests>
+                            <configOptions>
+                                <useMutiny>true</useMutiny>
+                                <interfaceOnly>true</interfaceOnly>
+                                <useSwaggerAnnotations>false</useSwaggerAnnotations>
+                                <dateLibrary>java8</dateLibrary>
+                                <java8>true</java8>
+                                <sourceFolder>src/gen/java</sourceFolder>
+                                <useJakartaEe>true</useJakartaEe>
+                            </configOptions>
                         </configuration>
                     </execution>
                 </executions>

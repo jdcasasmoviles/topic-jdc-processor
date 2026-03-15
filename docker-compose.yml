@@ -48,7 +48,7 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_CREATE_TOPICS: "_schemas:1:1,topic-jdc:1:1"
+      KAFKA_CREATE_TOPICS: "_schemas:1:1,topic-jdc:3:1" 
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -67,8 +67,8 @@ services:
       timeout: 5s
       retries: 1
       start_period: 10s
-    mem_limit: 512M
-    mem_reservation: 512M
+    mem_limit: 1G
+    mem_reservation: 1G
     restart: on-failure:3
     logging:
       driver: "json-file"
@@ -168,13 +168,23 @@ services:
       MP_MESSAGING_CONNECTOR_SMALLRYE_KAFKA_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       QUARKUS_LOG_LEVEL: DEBUG
       QUARKUS_KAFKA_SNAPSHOT_PRODUCER_ENABLE: "false"
-      JAVA_OPTS: "-Xmx128M -Xms128M"
+      JAVA_OPTS: "-Xmx512m -Xms512m -XX:+UseG1GC -XX:MaxGCPauseMillis=50 -XX:InitiatingHeapOccupancyPercent=35 -XX:+UseStringDeduplication -XX:+HeapDumpOnOutOfMemoryError -XX:+UnlockExperimentalVMOptions -XX:G1NewSizePercent=20 -XX:G1MaxNewSizePercent=30"
+      # Configuración específica para reactividad
+      QUARKUS_THREAD_POOL_MAX_THREADS: "200"
+      QUARKUS_VERTX_EVENT_LOOPS_POOL_SIZE: "4"
     ports:
       - "8080:8084"
     networks:
-      - jdc-network
-    mem_limit: 256M
-    mem_reservation: 256M
+      jdc-network:
+        aliases:
+          - app
+    sysctls:
+      - net.core.somaxconn=65535
+      - net.ipv4.tcp_max_syn_backlog=65535
+      - net.ipv4.tcp_fin_timeout=15
+      - net.ipv4.tcp_tw_reuse=1
+    mem_limit: 1024M  # Aumentar de 512M
+    mem_reservation: 1024M
     restart: on-failure:3
     logging:
       driver: "json-file"

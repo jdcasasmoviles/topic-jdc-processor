@@ -10,6 +10,8 @@ import io.smallrye.common.annotation.RunOnVirtualThread;
 import io.smallrye.mutiny.Uni;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import org.eclipse.microprofile.faulttolerance.exceptions.CircuitBreakerOpenException;
 import org.jboss.logging.Logger;
 import java.util.concurrent.TimeoutException;
@@ -25,13 +27,15 @@ public class MessageController implements TaskApi {
     @Inject
     ProcessServiceImpl processMessageUseCase;
 
-    @Override
+    /*
+        @Override
     @Retry(maxRetries = 3, delay = 1000)
-    @Timeout(5000)
+    @Timeout(6000)
     @CircuitBreaker(
-            requestVolumeThreshold = 4,
-            failureRatio = 0.75,
-            delay = 10000
+            requestVolumeThreshold = 50,      // Ventana más grande (50 peticiones)
+            failureRatio = 0.75,               // 75% de fallos (más tolerante)
+            delay = 2000,                       // Delay más corto (2 segundos)
+            successThreshold = 10                // Necesita 10 éxitos para cerrar
     )
     @RunOnVirtualThread
     public TaskResponse processMessage(TaskRequest request) {
@@ -49,8 +53,9 @@ public class MessageController implements TaskApi {
                 .onFailure()
                 .recoverWithItem(throwable -> handleError(request, throwable, startTime))
                 .await()
-                .indefinitely(); // Espera indefinidamente, @Timeout cortará si excede
+                .atMost(Duration.ofSeconds(6)); // Timeout explícito
     }
+    */
 
     private TaskResponse handleError(TaskRequest request, Throwable throwable, long startTime) {
         long elapsed = System.currentTimeMillis() - startTime;
@@ -80,6 +85,13 @@ public class MessageController implements TaskApi {
         MessageRequestDTO dto = new MessageRequestDTO();
         dto.setNombre(request.getName());
         dto.setDescripcion(request.getDescription());
+        dto.setTelephone(request.getTelephone());
+        dto.setEmail(request.getEmail());
+        dto.setPublisher(request.getPublisher());
+        dto.setVersion(request.getVersion());
+        dto.setCreated_at(request.getCreatedAt());
+        dto.setUpdated_at(request.getUpdatedAt());
+        dto.setTasks(request.getTasks());
         return dto;
     }
     private TaskResponse mapToResponse(MessageResponseDTO dto) {
@@ -89,4 +101,30 @@ public class MessageController implements TaskApi {
         return response;
     }
 
+
+    @Override virtual thereas
+    @Retry(maxRetries = 3, delay = 500, jitter = 200)  // Añadir jitter para evitar tormentas de reintentos
+    @Timeout(8000)  // Aumentar a 8 segundos (mayor que delivery.timeout.ms + margen)
+    @CircuitBreaker(
+            requestVolumeThreshold = 50,
+            failureRatio = 0.65,  // Reducir ligeramente la tolerancia
+            delay = 3000,          // Aumentar delay para dar tiempo a recuperación
+            successThreshold = 5
+    )
+    @RunOnVirtualThread
+    public Uni<TaskResponse> processMessage(@NotNull @Valid TaskRequest request) {
+        long startTime = System.currentTimeMillis();
+        LOG.infov("Processing message request: {0} in {1}ms", request.getVersion(), startTime);
+        return Uni.createFrom()
+                .item(request)
+                .map(this::mapToDTO)
+                .flatMap(dto -> processMessageUseCase.execute(dto))
+                .map(this::mapToResponse)
+                .invoke(response -> {
+                    long elapsed = System.currentTimeMillis() - startTime;
+                    LOG.infov("Successfully processed: {0} in {1}ms", response.getId(), elapsed);
+                })
+                .onFailure()
+                .recoverWithItem(throwable -> handleError(request, throwable, startTime));
+    }
 }
